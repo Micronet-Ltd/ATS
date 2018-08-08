@@ -1,0 +1,11 @@
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/.idea/*
+a300keys.properties
+micronet-platform.keystore
+micronet-treq5-platform.keystore
+obc5keys.properties
