@@ -1,3 +1,8 @@
+/*
+ * This file is subject to the terms and conditions defined in
+ * file 'LICENSE.txt', which is part of this source code package.
+ */
+
 /////////////////////////////////////////////////////////////
 // ExternalReceiver:
 //  Receives messages from external (outside this package) applications (not just system alarms)

@@ -1,3 +1,8 @@
+/*
+ * This file is subject to the terms and conditions defined in
+ * file 'LICENSE.txt', which is part of this source code package.
+ */
+
 /////////////////////////////////////////////////////////////
 // J1587:
 //  Handles the SAE J1587 Heavy Vehicle Bus protocol that runs on J1708

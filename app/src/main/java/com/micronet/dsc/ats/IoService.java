@@ -1,3 +1,8 @@
+/*
+ * This file is subject to the terms and conditions defined in
+ * file 'LICENSE.txt', which is part of this source code package.
+ */
+
 /////////////////////////////////////////////////////////////
 // IoService:
 //  Handles communications with hardware regarding I/O and Device Info.

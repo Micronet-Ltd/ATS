@@ -1,3 +1,8 @@
+/*
+ * This file is subject to the terms and conditions defined in
+ * file 'LICENSE.txt', which is part of this source code package.
+ */
+
 /////////////////////////////////////////////////////////////
 // Queue: Message/Event Queue Direct Access Object
 //  use this class to manipulate the event queue

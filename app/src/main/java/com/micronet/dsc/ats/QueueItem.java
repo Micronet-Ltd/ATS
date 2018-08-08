@@ -1,3 +1,8 @@
+/*
+ * This file is subject to the terms and conditions defined in
+ * file 'LICENSE.txt', which is part of this source code package.
+ */
+
 /////////////////////////////////////////////////////////////
 // QueueItem: 
 //	This is a single event (item) in the Event Queue

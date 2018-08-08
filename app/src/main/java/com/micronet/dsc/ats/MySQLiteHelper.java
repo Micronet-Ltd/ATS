@@ -1,3 +1,8 @@
+/*
+ * This file is subject to the terms and conditions defined in
+ * file 'LICENSE.txt', which is part of this source code package.
+ */
+
 /////////////////////////////////////////////////////////////
 // MySQLiteHelper
 //  Helper class that is used to open the correct Database and create/upgrade tables if needed

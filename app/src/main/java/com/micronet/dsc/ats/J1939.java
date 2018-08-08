@@ -1,3 +1,8 @@
+/*
+ * This file is subject to the terms and conditions defined in
+ * file 'LICENSE.txt', which is part of this source code package.
+ */
+
 /////////////////////////////////////////////////////////////
 // J1939:
 //  Handles the SAE J1939 Heavy Vehicle Bus protocol that runs on CAN
