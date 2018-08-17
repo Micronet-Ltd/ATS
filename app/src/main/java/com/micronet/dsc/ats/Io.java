@@ -206,6 +206,10 @@ public class Io {
         intentFilterIo.addAction(IoService.BROADCAST_IO_HARDWARE_INPUTDATA);
         service.context.registerReceiver(ioPollReceiver, intentFilterIo);
 
+        // register the dock state receiver
+        IntentFilter intentFilterDockState =  new IntentFilter();
+        intentFilterDockState.addAction(Intent.ACTION_DOCK_EVENT);
+        service.context.registerReceiver(dockStateReceiver, intentFilterDockState);
 
         // start the IO Service
         Intent serviceIntent = new Intent(service.context, IoService.class);
@@ -278,6 +282,7 @@ public class Io {
         try {
             service.context.unregisterReceiver(ioPollReceiver);
             service.context.unregisterReceiver(ioInitReceiver);
+            service.context.unregisterReceiver(dockStateReceiver);
         } catch (Exception e) {
             // not an issue, this can happen if they weren't registered
         }
@@ -1215,6 +1220,46 @@ public class Io {
 
         } // onReceive()
     } // IoPollReceiver()
+
+    //////////////////////////////////////////////////////////
+    // DockStateReceiver()
+    //   Receives the dock state and any changes to dock state
+    //////////////////////////////////////////////////////////
+    DockStateReceiver dockStateReceiver = new DockStateReceiver();
+    class DockStateReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            try {
+                Log.vv(TAG, "dockStateReceiver()");
+
+                // Get the current dock state
+                int dockState = intent.getIntExtra(Intent.EXTRA_DOCK_STATE, -1);
+
+                Log.v(TAG, "Current dock state is: " + dockState);
+
+                if(dockState < 0){
+                    Log.e(TAG, "Invalid dock state: " + dockState);
+                }else{
+                    int previousDockState = service.state.readState(State.DOCK_STATE);
+
+                    service.state.writeState(State.DOCK_STATE, dockState);
+
+                    // If device has gone from undocked to docked
+                    if(previousDockState == 0 && dockState > 0){
+                        service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_DOCKED, dockState);
+                    }else if(previousDockState > 0 && dockState == 0){ // If docked and then changed to undocked
+                        service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_UNDOCKED, dockState);
+                    }
+                }
+
+            } catch (Exception e) {
+                Log.e(TAG, "dockStateReceiver Exception " + e.toString(), e);
+            }
+
+        } // onReceive()
+    } // DockStateReceiver()
 
 
     private Runnable delayedEngineOnTask  = new Runnable() {

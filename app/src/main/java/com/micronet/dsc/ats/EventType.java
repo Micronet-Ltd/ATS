@@ -28,7 +28,8 @@ public class EventType {
     public final static int EVENT_TYPE_ERROR = 12; // some error has occurred in the App
     public final static int EVENT_TYPE_CHANGE_SYSTEMTIME = 13; // this app has changed the system time
     public final static int EVENT_TYPE_CONFIGURATION_REPLACED = 14; // a configuration file has been replaced/overwritten
-
+    public final static int EVENT_TYPE_DEVICE_DOCKED = 15; // device docked
+    public final static int EVENT_TYPE_DEVICE_UNDOCKED = 16; // device undocked
 
     // Events triggered by the device . .these will be sent by local broadcast
     public final static int EVENT_TYPES_DEVICE_START = 20;

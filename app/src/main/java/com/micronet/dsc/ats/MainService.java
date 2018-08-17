@@ -974,16 +974,20 @@ public class MainService extends Service {
 
                 if ((nowElapsedTime > lastIoPollTime) &&
                         (nowElapsedTime - lastIoPollTime > THREAD_WATCHDOG_MAX_IO_RECEIPT_MS)) {
-                    Log.e(TAG, "Thread Watchdog Error. IO service jammed. Last received " + (nowElapsedTime - lastIoPollTime) + " ms ago");
-                    if (!sent_iothread_jam_message) {
-                        // we haven't yet sent a message to the server saying that we jammed
-                        addEventWithExtra(EventType.EVENT_TYPE_ERROR, EventType.ERROR_IO_THREAD_JAMMED);
-                        sent_iothread_jam_message = true;
+                    // If device is docked then restart IO
+                    if(state.readState(State.DOCK_STATE) > 0){
+                        Log.e(TAG, "Thread Watchdog Error. IO service jammed. Last received " + (nowElapsedTime - lastIoPollTime) + " ms ago");
+                        if (!sent_iothread_jam_message) {
+                            // we haven't yet sent a message to the server saying that we jammed
+                            addEventWithExtra(EventType.EVENT_TYPE_ERROR, EventType.ERROR_IO_THREAD_JAMMED);
+                            sent_iothread_jam_message = true;
+                        }
+
+                        // restart the io service process
+                        io.restartIosProcess();
+                    }else{
+                        Log.d(TAG, "Device is undocked. Not restarting IO.");
                     }
-
-                    // restart the io service process
-                    io.restartIosProcess();
-
 
                     //io.killIoService();
 

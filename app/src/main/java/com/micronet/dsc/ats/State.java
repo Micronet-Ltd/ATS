@@ -35,6 +35,8 @@ public class State {
 
     public static final int FLAG_WAIT_ENGINE_ON_MESSAGE = 5; // are we waiting to send the engine-on message
 
+    public static final int DOCK_STATE = 6;
+
     public static final int FLAG_IGNITIONKEY_INPUT = 10;
     public static final int FLAG_GENERAL_INPUT1 = 11;
     public static final int FLAG_GENERAL_INPUT2 = 12;
