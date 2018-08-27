@@ -19,6 +19,7 @@ import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 public class Io {
@@ -33,13 +34,23 @@ public class Io {
     //  1 Analog Voltage Input
     //  6 General Purpose Digital Inputs
 
-    public static final int MAX_GP_INPUTS_SUPPORTED = 6; // used in arrays
+    public static int MAX_GP_INPUTS_SUPPORTED; // used in arrays
+
+    static {
+        if(BuildConfig.FLAVOR_DEVICE.equals(MainService.BUILD_FLAVOR_OBC5)) {
+            MAX_GP_INPUTS_SUPPORTED = 7;
+        }
+        else { // A317
+            MAX_GP_INPUTS_SUPPORTED = 6;
+        }
+    }
+
     public static final int INPUT_BITVALUE_IGNITION = 1; // the bit value in the inputs_bitfield of the ignition bit
     // gp Inputs are hardcoded to = 1 << input number (e.g. Input#2 = 1 << 2 = value of 4)
 
     public static final String DEFAULT_SERIAL_NUMBER = "00000000"; // used if we can't determine the serial number of device
 
-
+    public static AtomicLong lastDockStateChange = new AtomicLong(0);
 
     //private static boolean USE_INPUT6_AS_IGNITION = false; // are we currently using input6 as the ignition line?
 
@@ -175,7 +186,8 @@ public class Io {
         if (flag) status.input_bitfield |= (1 << 5);
         flag = service.state.readStateBool(State.FLAG_GENERAL_INPUT6);
         if (flag) status.input_bitfield |= (1 << 6);
-
+        flag = service.state.readStateBool(State.FLAG_GENERAL_INPUT7);
+        if (flag) status.input_bitfield |= (1 << 7);
 
         //Log.d(TAG, "Read Input States: " + savedIo.input_bitfield);
 
@@ -868,6 +880,11 @@ public class Io {
                     event_off_id = EventType.EVENT_TYPE_INPUT6_OFF;
                     state_id = State.FLAG_GENERAL_INPUT6;
                 break;
+            case 7: setting_id = Config.SETTING_INPUT_GP7;
+                    event_on_id = EventType.EVENT_TYPE_INPUT7_ON;
+                    event_off_id = EventType.EVENT_TYPE_INPUT7_OFF;
+                    state_id = State.FLAG_GENERAL_INPUT7;
+                break;
             default:
                 Log.w(TAG, "setDigitalInput() Unimplemented Input #" + input_num);
                 return false;
@@ -1249,8 +1266,10 @@ public class Io {
                     // If device has gone from undocked to docked
                     if(previousDockState == 0 && dockState > 0){
                         service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_DOCKED, dockState);
+                        lastDockStateChange.set(SystemClock.elapsedRealtime());
                     }else if(previousDockState > 0 && dockState == 0){ // If docked and then changed to undocked
                         service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_UNDOCKED, dockState);
+                        lastDockStateChange.set(SystemClock.elapsedRealtime());
                     }
                 }
 

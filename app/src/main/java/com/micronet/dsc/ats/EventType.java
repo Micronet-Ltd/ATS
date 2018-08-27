@@ -42,6 +42,7 @@ public class EventType {
     public final static int EVENT_TYPE_INPUT4_ON = 24;
     public final static int EVENT_TYPE_INPUT5_ON = 25;
     public final static int EVENT_TYPE_INPUT6_ON = 26;
+    public final static int EVENT_TYPE_INPUT7_ON = 27;
 
     public final static int EVENT_TYPE_IGNITION_KEY_OFF = 30;
     public final static int EVENT_TYPE_INPUT1_OFF = 31;
@@ -50,6 +51,7 @@ public class EventType {
     public final static int EVENT_TYPE_INPUT4_OFF = 34;
     public final static int EVENT_TYPE_INPUT5_OFF = 35;
     public final static int EVENT_TYPE_INPUT6_OFF = 36;
+    public final static int EVENT_TYPE_INPUT7_OFF = 37;
 
     public final static int EVENT_TYPE_ENGINE_STATUS_ON = 40;
     public final static int EVENT_TYPE_LOW_BATTERY_ON = 41;

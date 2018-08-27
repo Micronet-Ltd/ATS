@@ -974,9 +974,10 @@ public class MainService extends Service {
 
                 if ((nowElapsedTime > lastIoPollTime) &&
                         (nowElapsedTime - lastIoPollTime > THREAD_WATCHDOG_MAX_IO_RECEIPT_MS)) {
-                    // If device is docked then restart IO
-                    if(state.readState(State.DOCK_STATE) > 0){
-                        Log.e(TAG, "Thread Watchdog Error. IO service jammed. Last received " + (nowElapsedTime - lastIoPollTime) + " ms ago");
+                    // If device is docked AND the time since last dock event was at least 3000 ms seconds ago, then throw error
+                    if(state.readState(State.DOCK_STATE) > 0 && (nowElapsedTime - Io.lastDockStateChange.get() > 4000)){
+                        Log.e(TAG, "Thread Watchdog Error. IO service jammed. Last received " + (nowElapsedTime - lastIoPollTime) +
+                                " ms ago, last dock change " + (nowElapsedTime - Io.lastDockStateChange.get()) + " ms ago");
                         if (!sent_iothread_jam_message) {
                             // we haven't yet sent a message to the server saying that we jammed
                             addEventWithExtra(EventType.EVENT_TYPE_ERROR, EventType.ERROR_IO_THREAD_JAMMED);

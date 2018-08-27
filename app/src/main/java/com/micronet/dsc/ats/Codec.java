@@ -403,6 +403,8 @@ public class Codec {
 
         } // additional data was null
 
+        // Add in the dock state here and increment index
+
         message.length = index;
 
         return message;

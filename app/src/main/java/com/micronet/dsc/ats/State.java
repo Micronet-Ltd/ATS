@@ -44,6 +44,7 @@ public class State {
     public static final int FLAG_GENERAL_INPUT4 = 14;
     public static final int FLAG_GENERAL_INPUT5 = 15;
     public static final int FLAG_GENERAL_INPUT6 = 16;
+    public static final int FLAG_GENERAL_INPUT7 = 17;
 
 
     // GPS
