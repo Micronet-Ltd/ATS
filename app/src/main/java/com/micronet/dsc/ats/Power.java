@@ -1129,7 +1129,7 @@ public class Power {
                     if ((service.SHOULD_KEEP_SCREEN_ON) || // if we are always keeping screen on
                             (!isScreenOn())) { // or if screen is off
                         // then we can power down when there are no wakelocks and the device is not undocked
-                        if (!isWakeLockHeld() && !(service.state.readState(State.DOCK_STATE) == 0)) {
+                        if (!isWakeLockHeld() && service.state.readState(State.DOCK_STATE) != 0) {
                             powerDown();
                         }
                     } // screen is appropriate

@@ -1270,6 +1270,9 @@ public class Io {
                     }else if(previousDockState > 0 && dockState == 0){ // If docked and then changed to undocked
                         service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_UNDOCKED, dockState);
                         lastDockStateChange.set(SystemClock.elapsedRealtime());
+
+                        // Set warm start to false
+                        service.engine.setWarmStart(false);
                     }
                 }
 
