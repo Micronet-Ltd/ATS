@@ -112,6 +112,7 @@ public class Io {
     public class Status {
         short battery_voltage; // our current voltage
         short input_bitfield; // logical input states .. see above, bit 0 is the ignition key, bit 1 = input 1, etc..
+        byte dock_state;
 
         public boolean flagEngineStatus; // engine on or off .. used in idling, etc..
         boolean flagBadAlternator, flagLowBattery;
@@ -466,6 +467,7 @@ public class Io {
         try {
             item.battery_voltage = status.battery_voltage;
             item.input_bitfield = status.input_bitfield;
+            item.dock_state = status.dock_state;
         } catch (Exception e) {
             Log.e(TAG, "Exception populateQueueItem() " + e.toString(), e);
         }
@@ -1253,29 +1255,28 @@ public class Io {
 
                 // Get the current dock state
                 int dockState = intent.getIntExtra(Intent.EXTRA_DOCK_STATE, -1);
-
-                Log.v(TAG, "Current dock state is: " + dockState);
+                Log.v(TAG, "Dock state is: " + dockState);
 
                 if(dockState < 0){
                     Log.e(TAG, "Invalid dock state: " + dockState);
                 }else{
+                    status.dock_state = (byte) (dockState&0xFF);
                     int previousDockState = service.state.readState(State.DOCK_STATE);
-
                     service.state.writeState(State.DOCK_STATE, dockState);
 
                     // If device has gone from undocked to docked
                     if(previousDockState == 0 && dockState > 0){
-                        service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_DOCKED, dockState);
                         lastDockStateChange.set(SystemClock.elapsedRealtime());
+
+                        service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_DOCKED, dockState);
                     }else if(previousDockState > 0 && dockState == 0){ // If docked and then changed to undocked
-                        service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_UNDOCKED, dockState);
                         lastDockStateChange.set(SystemClock.elapsedRealtime());
 
                         // Set warm start to false
                         service.engine.setWarmStart(false);
+                        service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_UNDOCKED, dockState);
                     }
                 }
-
             } catch (Exception e) {
                 Log.e(TAG, "dockStateReceiver Exception " + e.toString(), e);
             }
