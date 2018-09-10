@@ -28,6 +28,7 @@ public class Io {
 
     private static final String WAKELOCK_INPUT_NAME = "ATS_INPUT";
     private static final String WAKELOCK_IGNITION_NAME = "ATS_IGNITION";
+    private static final String WAKELOCK_DOCK_NAME = "ATS_DOCK_STATE";
 
     // This class currently supports:
     //  1 Ignition Key Input
@@ -137,6 +138,7 @@ public class Io {
 
     PowerManager.WakeLock ignitionWakeLock; // so we can hold a wake lock during and after ignition key input
     PowerManager.WakeLock[] gpInputWakelocks = new PowerManager.WakeLock[MAX_GP_INPUTS_SUPPORTED];
+    PowerManager.WakeLock dockStateWakeLock;
 
 
     //////////////////////////////////////////
@@ -317,6 +319,10 @@ public class Io {
         // make sure we release any wake locks
         if (ignitionWakeLock != null) {
             ignitionWakeLock = service.power.cancelWakeLock(WAKELOCK_IGNITION_NAME, ignitionWakeLock);
+        }
+
+        if( dockStateWakeLock != null){
+            dockStateWakeLock = service.power.cancelWakeLock(WAKELOCK_DOCK_NAME, dockStateWakeLock);
         }
 
         int i;
@@ -1264,11 +1270,18 @@ public class Io {
                     int previousDockState = service.state.readState(State.DOCK_STATE);
                     service.state.writeState(State.DOCK_STATE, dockState);
 
+                    if(dockState == 0){
+                        // If undocked then make an infinite wakelock so device doesn't shutdown
+                        dockStateWakeLock = service.power.changeWakeLock(WAKELOCK_DOCK_NAME, dockStateWakeLock, 0);
+                    }
+
                     // If device has gone from undocked to docked
                     if(previousDockState == 0 && dockState > 0){
                         lastDockStateChange.set(SystemClock.elapsedRealtime());
 
                         service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_DOCKED, dockState);
+
+                        dockStateWakeLock = service.power.changeWakeLock(WAKELOCK_DOCK_NAME, dockStateWakeLock, 600);
                     }else if(previousDockState > 0 && dockState == 0){ // If docked and then changed to undocked
                         lastDockStateChange.set(SystemClock.elapsedRealtime());
 
