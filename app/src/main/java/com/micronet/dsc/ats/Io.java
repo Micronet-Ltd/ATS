@@ -201,7 +201,7 @@ public class Io {
     // start()
     //      "Start" the I/O monitoring, called when app is started
     ////////////////////////////////////////////////////////////////////
-    public void start() {
+    public void start(boolean withDockState) {
 
         // schedule the IO checks with a fixed delay instead of fixed rate
         // so that we don't execute 100,000+ times after waking up from a sleep.
@@ -225,10 +225,12 @@ public class Io {
         intentFilterIo.addAction(IoService.BROADCAST_IO_HARDWARE_INPUTDATA);
         service.context.registerReceiver(ioPollReceiver, intentFilterIo);
 
-        // register the dock state receiver
-        IntentFilter intentFilterDockState =  new IntentFilter();
-        intentFilterDockState.addAction(Intent.ACTION_DOCK_EVENT);
-        service.context.registerReceiver(dockStateReceiver, intentFilterDockState);
+        if (withDockState) {
+			// register the dock state receiver
+			IntentFilter intentFilterDockState =  new IntentFilter();
+			intentFilterDockState.addAction(Intent.ACTION_DOCK_EVENT);
+			service.context.registerReceiver(dockStateReceiver, intentFilterDockState);
+        }
 
         // start the IO Service
         Intent serviceIntent = new Intent(service.context, IoService.class);
@@ -277,7 +279,7 @@ public class Io {
     // stop()
     //      "Stop" the I/O monitoring, called when app is ended
     ////////////////////////////////////////////////////////////////////
-    public void stop() {
+    public void stop(boolean withDockState) {
 
         Log.v(TAG, "stop()");
 
@@ -301,7 +303,9 @@ public class Io {
         try {
             service.context.unregisterReceiver(ioPollReceiver);
             service.context.unregisterReceiver(ioInitReceiver);
-            service.context.unregisterReceiver(dockStateReceiver);
+            if (withDockState){
+				service.context.unregisterReceiver(dockStateReceiver);
+            }
         } catch (Exception e) {
             // not an issue, this can happen if they weren't registered
         }
@@ -1286,12 +1290,21 @@ public class Io {
                         service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_DOCKED, dockState);
 
                         dockStateWakeLock = service.power.changeWakeLock(WAKELOCK_DOCK_NAME, dockStateWakeLock, 600);
+						
+						Log.v(TAG, "restarting io polling begin");
+                        start(false); //Reenbling io polling since MCU connection has been reestablished
+                        Log.v(TAG, "restarting io polling end");
                     }else if(previousDockState > 0 && dockState == 0){ // If docked and then changed to undocked
                         lastDockStateChange.set(SystemClock.elapsedRealtime());
 
                         // Set warm start to false
                         service.engine.setWarmStart(false);
                         service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_UNDOCKED, dockState);
+						
+						Log.v(TAG, "stopping io polling begin");
+                        stop(false); //disabling io polling since MCU connection has been disconnected
+                        // Set warm start to false
+                        Log.v(TAG, "stopping io polling end");
                     }
                 }
             } catch (Exception e) {

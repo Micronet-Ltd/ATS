@@ -282,7 +282,7 @@ public class MainService extends Service {
         // start things which have timers, receivers, etc, and only get started once..
         local.start();  // local broadcasts
         power.start();
-        io.start();
+        io.start(true);
         ota.start();
         position.init(); // Don't "start" the position, just get the last known location
 
@@ -598,7 +598,7 @@ public class MainService extends Service {
 
         local.stop(); // tear down local broadcasts
         power.stop(); // tears down FOTA windows and locks
-        io.stop();  // tears down I/O polling
+        io.stop(true);  // tears down I/O polling
         ota.stop(); // tears down UDP
         queue.close(); // closes DB
 
