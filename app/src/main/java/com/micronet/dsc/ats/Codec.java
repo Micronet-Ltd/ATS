@@ -337,6 +337,7 @@ public class Codec {
         message.data[index+1] = (byte) ((queueItem.continuous_idle >> 8) & 0xFF);
         index += FIELD_LENGTH_IDLE;
 
+        boolean dataLengthAdded = false;
 
         if (queueItem.additional_data_bytes != null) {
 
@@ -345,6 +346,7 @@ public class Codec {
             message.data[index + 1] = (byte) ((data_length >> 8) & 0xFF);
             index += FIELD_LENGTH_DATA_LENGTH;
 
+            dataLengthAdded = true;
 
             for (i = 0 ; i < data_length; i++) {
                 if (index+i < MAX_OUTGOING_MESSAGE_LENGTH) // safety
@@ -379,6 +381,8 @@ public class Codec {
                 message.data[index] = (byte) (data_length & 0xFF);
                 message.data[index+1] = (byte) ((data_length >>8) & 0xFF);
                 index += FIELD_LENGTH_DATA_LENGTH;
+
+                dataLengthAdded = true;
             }         
        
             int extra = queueItem.extra;
@@ -403,6 +407,18 @@ public class Codec {
 
         } // additional data was null
 
+        // If not already written then add that data length is 0, so we can put dock state after
+        if(!dataLengthAdded){
+            message.data[index] = (byte) 0;
+            message.data[index+1] = (byte) 0;
+            index += FIELD_LENGTH_DATA_LENGTH;
+        }
+
+        // Add in the dock state here and increment index
+        message.data[index] = (byte) (queueItem.dock_state & 0xFF);
+        index += 1;
+
+        // Set the length of the message
         message.length = index;
 
         return message;

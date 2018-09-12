@@ -19,6 +19,7 @@ import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 public class Io {
@@ -27,19 +28,30 @@ public class Io {
 
     private static final String WAKELOCK_INPUT_NAME = "ATS_INPUT";
     private static final String WAKELOCK_IGNITION_NAME = "ATS_IGNITION";
+    private static final String WAKELOCK_DOCK_NAME = "ATS_DOCK_STATE";
 
     // This class currently supports:
     //  1 Ignition Key Input
     //  1 Analog Voltage Input
     //  6 General Purpose Digital Inputs
 
-    public static final int MAX_GP_INPUTS_SUPPORTED = 6; // used in arrays
+    public static int MAX_GP_INPUTS_SUPPORTED; // used in arrays
+
+    static {
+        if(BuildConfig.FLAVOR_DEVICE.equals(MainService.BUILD_FLAVOR_OBC5)) {
+            MAX_GP_INPUTS_SUPPORTED = 7;
+        }
+        else { // A317
+            MAX_GP_INPUTS_SUPPORTED = 6;
+        }
+    }
+
     public static final int INPUT_BITVALUE_IGNITION = 1; // the bit value in the inputs_bitfield of the ignition bit
     // gp Inputs are hardcoded to = 1 << input number (e.g. Input#2 = 1 << 2 = value of 4)
 
     public static final String DEFAULT_SERIAL_NUMBER = "00000000"; // used if we can't determine the serial number of device
 
-
+    public static AtomicLong lastDockStateChange = new AtomicLong(0);
 
     //private static boolean USE_INPUT6_AS_IGNITION = false; // are we currently using input6 as the ignition line?
 
@@ -101,6 +113,7 @@ public class Io {
     public class Status {
         short battery_voltage; // our current voltage
         short input_bitfield; // logical input states .. see above, bit 0 is the ignition key, bit 1 = input 1, etc..
+        byte dock_state;
 
         public boolean flagEngineStatus; // engine on or off .. used in idling, etc..
         boolean flagBadAlternator, flagLowBattery;
@@ -125,6 +138,7 @@ public class Io {
 
     PowerManager.WakeLock ignitionWakeLock; // so we can hold a wake lock during and after ignition key input
     PowerManager.WakeLock[] gpInputWakelocks = new PowerManager.WakeLock[MAX_GP_INPUTS_SUPPORTED];
+    PowerManager.WakeLock dockStateWakeLock;
 
 
     //////////////////////////////////////////
@@ -175,7 +189,8 @@ public class Io {
         if (flag) status.input_bitfield |= (1 << 5);
         flag = service.state.readStateBool(State.FLAG_GENERAL_INPUT6);
         if (flag) status.input_bitfield |= (1 << 6);
-
+        flag = service.state.readStateBool(State.FLAG_GENERAL_INPUT7);
+        if (flag) status.input_bitfield |= (1 << 7);
 
         //Log.d(TAG, "Read Input States: " + savedIo.input_bitfield);
 
@@ -186,13 +201,12 @@ public class Io {
     // start()
     //      "Start" the I/O monitoring, called when app is started
     ////////////////////////////////////////////////////////////////////
-    public void start() {
+    public void start(boolean withDockState) {
 
         // schedule the IO checks with a fixed delay instead of fixed rate
         // so that we don't execute 100,000+ times after waking up from a sleep.
 
         Log.v(TAG, "start()");
-
 
         mainHandler  = new Handler();
 
@@ -206,6 +220,17 @@ public class Io {
         intentFilterIo.addAction(IoService.BROADCAST_IO_HARDWARE_INPUTDATA);
         service.context.registerReceiver(ioPollReceiver, intentFilterIo);
 
+        if (withDockState) {
+            // Assume ATS always starts up in undocked state and hold a wake lock
+            dockStateWakeLock = service.power.changeWakeLock(WAKELOCK_DOCK_NAME, dockStateWakeLock, 0);
+            // Set default dock state to 0, because if we are docked then we will receive the actual dock state
+            service.state.writeState(State.DOCK_STATE, 0);
+
+			// register the dock state receiver
+			IntentFilter intentFilterDockState =  new IntentFilter();
+			intentFilterDockState.addAction(Intent.ACTION_DOCK_EVENT);
+			service.context.registerReceiver(dockStateReceiver, intentFilterDockState);
+        }
 
         // start the IO Service
         Intent serviceIntent = new Intent(service.context, IoService.class);
@@ -254,7 +279,7 @@ public class Io {
     // stop()
     //      "Stop" the I/O monitoring, called when app is ended
     ////////////////////////////////////////////////////////////////////
-    public void stop() {
+    public void stop(boolean withDockState) {
 
         Log.v(TAG, "stop()");
 
@@ -278,6 +303,9 @@ public class Io {
         try {
             service.context.unregisterReceiver(ioPollReceiver);
             service.context.unregisterReceiver(ioInitReceiver);
+            if (withDockState){
+				service.context.unregisterReceiver(dockStateReceiver);
+            }
         } catch (Exception e) {
             // not an issue, this can happen if they weren't registered
         }
@@ -299,6 +327,10 @@ public class Io {
         // make sure we release any wake locks
         if (ignitionWakeLock != null) {
             ignitionWakeLock = service.power.cancelWakeLock(WAKELOCK_IGNITION_NAME, ignitionWakeLock);
+        }
+
+        if( dockStateWakeLock != null){
+            dockStateWakeLock = service.power.cancelWakeLock(WAKELOCK_DOCK_NAME, dockStateWakeLock);
         }
 
         int i;
@@ -449,6 +481,7 @@ public class Io {
         try {
             item.battery_voltage = status.battery_voltage;
             item.input_bitfield = status.input_bitfield;
+            item.dock_state = status.dock_state;
         } catch (Exception e) {
             Log.e(TAG, "Exception populateQueueItem() " + e.toString(), e);
         }
@@ -863,6 +896,11 @@ public class Io {
                     event_off_id = EventType.EVENT_TYPE_INPUT6_OFF;
                     state_id = State.FLAG_GENERAL_INPUT6;
                 break;
+            case 7: setting_id = Config.SETTING_INPUT_GP7;
+                    event_on_id = EventType.EVENT_TYPE_INPUT7_ON;
+                    event_off_id = EventType.EVENT_TYPE_INPUT7_OFF;
+                    state_id = State.FLAG_GENERAL_INPUT7;
+                break;
             default:
                 Log.w(TAG, "setDigitalInput() Unimplemented Input #" + input_num);
                 return false;
@@ -1215,6 +1253,66 @@ public class Io {
 
         } // onReceive()
     } // IoPollReceiver()
+
+    //////////////////////////////////////////////////////////
+    // DockStateReceiver()
+    //   Receives the dock state and any changes to dock state
+    //////////////////////////////////////////////////////////
+    DockStateReceiver dockStateReceiver = new DockStateReceiver();
+    class DockStateReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            try {
+                Log.vv(TAG, "dockStateReceiver()");
+
+                // Get the current dock state
+                int dockState = intent.getIntExtra(Intent.EXTRA_DOCK_STATE, -1);
+                Log.v(TAG, "Dock state is: " + dockState);
+
+                if(dockState < 0){
+                    Log.e(TAG, "Invalid dock state: " + dockState);
+                }else{
+                    status.dock_state = (byte) (dockState&0xFF);
+                    int previousDockState = service.state.readState(State.DOCK_STATE);
+                    service.state.writeState(State.DOCK_STATE, dockState);
+
+                    if(dockState == 0){
+                        // If undocked then make an infinite wakelock so device doesn't shutdown
+                        dockStateWakeLock = service.power.changeWakeLock(WAKELOCK_DOCK_NAME, dockStateWakeLock, 0);
+                    }
+
+                    // If device has gone from undocked to docked
+                    if(previousDockState == 0 && dockState > 0){
+                        lastDockStateChange.set(SystemClock.elapsedRealtime());
+
+                        service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_DOCKED, dockState);
+
+                        dockStateWakeLock = service.power.changeWakeLock(WAKELOCK_DOCK_NAME, dockStateWakeLock, 600);
+						
+						Log.v(TAG, "restarting io polling begin");
+                        start(false); //Reenbling io polling since MCU connection has been reestablished
+                        Log.v(TAG, "restarting io polling end");
+                    }else if(previousDockState > 0 && dockState == 0){ // If docked and then changed to undocked
+                        lastDockStateChange.set(SystemClock.elapsedRealtime());
+
+                        // Set warm start to false
+                        service.engine.setWarmStart(false);
+                        service.addEventWithExtra(EventType.EVENT_TYPE_DEVICE_UNDOCKED, dockState);
+						
+						Log.v(TAG, "stopping io polling begin");
+                        stop(false); //disabling io polling since MCU connection has been disconnected
+                        // Set warm start to false
+                        Log.v(TAG, "stopping io polling end");
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "dockStateReceiver Exception " + e.toString(), e);
+            }
+
+        } // onReceive()
+    } // DockStateReceiver()
 
 
     private Runnable delayedEngineOnTask  = new Runnable() {

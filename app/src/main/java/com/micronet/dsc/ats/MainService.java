@@ -282,7 +282,7 @@ public class MainService extends Service {
         // start things which have timers, receivers, etc, and only get started once..
         local.start();  // local broadcasts
         power.start();
-        io.start();
+        io.start(true);
         ota.start();
         position.init(); // Don't "start" the position, just get the last known location
 
@@ -598,7 +598,7 @@ public class MainService extends Service {
 
         local.stop(); // tear down local broadcasts
         power.stop(); // tears down FOTA windows and locks
-        io.stop();  // tears down I/O polling
+        io.stop(true);  // tears down I/O polling
         ota.stop(); // tears down UDP
         queue.close(); // closes DB
 
@@ -974,16 +974,21 @@ public class MainService extends Service {
 
                 if ((nowElapsedTime > lastIoPollTime) &&
                         (nowElapsedTime - lastIoPollTime > THREAD_WATCHDOG_MAX_IO_RECEIPT_MS)) {
-                    Log.e(TAG, "Thread Watchdog Error. IO service jammed. Last received " + (nowElapsedTime - lastIoPollTime) + " ms ago");
-                    if (!sent_iothread_jam_message) {
-                        // we haven't yet sent a message to the server saying that we jammed
-                        addEventWithExtra(EventType.EVENT_TYPE_ERROR, EventType.ERROR_IO_THREAD_JAMMED);
-                        sent_iothread_jam_message = true;
+                    // If device is docked AND the time since last dock event was at least 3000 ms seconds ago, then throw error
+                    if(state.readState(State.DOCK_STATE) > 0 && (nowElapsedTime - Io.lastDockStateChange.get() > 4000)){
+                        Log.e(TAG, "Thread Watchdog Error. IO service jammed. Last received " + (nowElapsedTime - lastIoPollTime) +
+                                " ms ago, last dock change " + (nowElapsedTime - Io.lastDockStateChange.get()) + " ms ago");
+                        if (!sent_iothread_jam_message) {
+                            // we haven't yet sent a message to the server saying that we jammed
+                            addEventWithExtra(EventType.EVENT_TYPE_ERROR, EventType.ERROR_IO_THREAD_JAMMED);
+                            sent_iothread_jam_message = true;
+                        }
+
+                        // restart the io service process
+                        io.restartIosProcess();
+                    }else{
+                        Log.d(TAG, "Device is undocked. Not restarting IO.");
                     }
-
-                    // restart the io service process
-                    io.restartIosProcess();
-
 
                     //io.killIoService();
 
