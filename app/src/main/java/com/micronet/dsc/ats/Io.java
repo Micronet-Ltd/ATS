@@ -208,11 +208,6 @@ public class Io {
 
         Log.v(TAG, "start()");
 
-        // Assume ATS always starts up in undocked state and hold a wake lock
-        dockStateWakeLock = service.power.changeWakeLock(WAKELOCK_DOCK_NAME, dockStateWakeLock, 0);
-        // Set default dock state to 0, because if we are docked then we will receive the actual dock state
-        service.state.writeState(State.DOCK_STATE, 0);
-
         mainHandler  = new Handler();
 
         // register the Init receiver
@@ -226,6 +221,11 @@ public class Io {
         service.context.registerReceiver(ioPollReceiver, intentFilterIo);
 
         if (withDockState) {
+            // Assume ATS always starts up in undocked state and hold a wake lock
+            dockStateWakeLock = service.power.changeWakeLock(WAKELOCK_DOCK_NAME, dockStateWakeLock, 0);
+            // Set default dock state to 0, because if we are docked then we will receive the actual dock state
+            service.state.writeState(State.DOCK_STATE, 0);
+
 			// register the dock state receiver
 			IntentFilter intentFilterDockState =  new IntentFilter();
 			intentFilterDockState.addAction(Intent.ACTION_DOCK_EVENT);
