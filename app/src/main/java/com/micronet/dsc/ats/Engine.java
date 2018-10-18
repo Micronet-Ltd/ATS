@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.micronet.dsc.ats.LocalMessage.BROADCAST_MESSAGE_VIN;
+
 public class Engine {
 
     private static final String TAG = "ATS-Engine"; // for logging
@@ -78,6 +80,8 @@ public class Engine {
         long fuel_mL;
         long fuel_mperL;
         int lamps_bf = 0; // bitfield containing lamp status
+        long vehicleSpeed;
+        double engineHours;
     };
 
     Status status = new Status();
@@ -89,7 +93,7 @@ public class Engine {
     int bus_type_fuel_mL = BUS_TYPE_NONE ; // which bus did this come from ?
     int bus_type_fuel_mperL = BUS_TYPE_NONE ; // which bus did this come from ?
     int bus_type_lamps_bf = BUS_TYPE_NONE ; // which bus did this come from ?
-
+    int bus_type_speed = BUS_TYPE_NONE;
 
     public static final int ENGINE_DTC_REMOVAL_COUNT = 3; // how many times must a code not appear on bus before it is considered gone
                                              // this is needed to hedge against us losing communication
@@ -841,12 +845,40 @@ public class Engine {
 
         vin = newVin;
         Log.i(TAG, "VIN has changed to " + vin);
+
+        sendVin(vin);
+
         clearAllParams();
         service.state.writeStateString(State.STRING_VIN, vin);
 
         return vin;
     } // checkVin()
 
+    public void sendVin(String vin) {
+
+        Log.v(TAG, "Sending Raw Bus Message");
+
+        // send a local message:
+        Intent ibroadcast = new Intent();
+        ibroadcast.setAction(BROADCAST_MESSAGE_VIN);
+        ibroadcast.putExtra("VIN", vin);
+
+        service.context.sendBroadcast(ibroadcast);
+
+    }
+
+    public long checkSpeed(int bus_type,long speed) {
+
+        if (!hasBusPriority(bus_type, bus_type_speed)) return status.vehicleSpeed;
+        bus_type_speed = bus_type;
+
+        if (speed == status.vehicleSpeed) return status.vehicleSpeed;
+
+        status.vehicleSpeed = speed;
+        Log.vv(TAG, "speed changed to " + status.vehicleSpeed + " km/h");
+
+        return status.vehicleSpeed;
+    } // checkSpeed()
 
 
 
@@ -1310,6 +1342,7 @@ public class Engine {
                 if (!j1939.isHighResOdometerPresent())
                     j1939.sendRequestOdometerLoRes();
                 j1939.sendRequestTotalFuel();
+                j1939.sendRequestEngineHours();
 
                 j1939.sendRequestCustom(getRawForwardActiveRequests(BUS_TYPE_J1939));
 
@@ -1355,13 +1388,13 @@ public class Engine {
 
 
     // the bus status should be broadcast by VBus every second. If we go 3 seconds without it, then something is wrong.
-    static final int MAX_BUSSTATUS_RECEIPT_MS = 3000; // 3 seconds
+    static final int MAX_BUSSTATUS_RECEIPT_MS = 6000; // 3 seconds
 
 
     boolean isBusServiceRunning() {
         long nowElapsedTime = SystemClock.elapsedRealtime();
 
-        //Log.v(TAG, "times : " + nowElapsedTime  + "  " + busStatusReceiver.last_alive_ertime + "  " + (nowElapsedTime-busStatusReceiver.last_alive_ertime));
+        Log.v(TAG, "times : " + nowElapsedTime  + "  " + busStatusReceiver.last_alive_ertime + "  " + (nowElapsedTime-busStatusReceiver.last_alive_ertime));
 
         if ((nowElapsedTime > busStatusReceiver.last_alive_ertime) &&
                 (nowElapsedTime - busStatusReceiver.last_alive_ertime > MAX_BUSSTATUS_RECEIPT_MS)) {
@@ -1434,6 +1467,7 @@ public class Engine {
                 // Watchdog: set that VBS is alive, we will error and try to restart VBS and if this is not updated regularly
                 isAlive = true;
                 last_alive_ertime = intent.getLongExtra(VehicleBusConstants.BROADCAST_EXTRA_TIMESTAMP, 0);
+                Log.i(TAG, "ON BUS Recieve:: " + SystemClock.elapsedRealtime() + " Last Alive Time " + last_alive_ertime);
 
 
                 // check whether we are allowed to start transmitting on can

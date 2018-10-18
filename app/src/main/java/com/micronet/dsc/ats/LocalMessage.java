@@ -32,6 +32,8 @@ public class LocalMessage {
     // Raw Bus messages are sent when raw bus data matches the filters
     public static final String BROADCAST_MESSAGE_RAWBUS = "com.micronet.dsc.ats.vehicle.raw";
 
+    public static final String BROADCAST_MESSAGE_VIN = "com.micronet.dsc.ats.device.vin";
+
 
     public static final int PERIODIC_TIMER_MS = 1000; // broadcast once per second
 
@@ -199,6 +201,11 @@ public class LocalMessage {
         ibroadcast.putExtra("fuelConsumptionMilliliters", engineStatus.fuel_mL);
         ibroadcast.putExtra("fuelEconomyMetersPerLiter", engineStatus.fuel_mperL);
         ibroadcast.putExtra("lampsBitfield",engineStatus.lamps_bf);
+        ibroadcast.putExtra("speed", engineStatus.vehicleSpeed);
+        ibroadcast.putExtra("engineHours", engineStatus.engineHours);
+        ibroadcast.putExtra("isConnectedToCAN", J1939.isOdometerFromPGN);
+        ibroadcast.putExtra("speed", J1939.isConnectedToCAN ? engineStatus.vehicleSpeed: -1);
+        J1939.isConnectedToCAN = false;
 
         // Add DTCs
 

@@ -60,7 +60,12 @@ public class J1939 extends EngineBus {
     long odometer_m = -1;
     long fuel_mL = -1;
     long fuel_mperL = -1;
+    long vehicleSpeed = -1;
+    long engineHours =-1;
+    long wheelSpeed =-1;
 
+    public static boolean isConnectedToCAN = false;
+    public static boolean isOdometerFromPGN = false;
 
     // These are used in determining how to deal with information received by the bus
     int configParkingBrakeDefault = 0; // if parking brake info conflicts, use this value
@@ -232,6 +237,8 @@ public class J1939 extends EngineBus {
     public static final int PGN_PARKING = 0x00FEF1; // cruise control&vehicle speed (reports parking brake)
     public static final int PGN_GEAR = 0x00F005; // ECM2 (reports reverse gear)
 
+    public static final int PGN_WHEEL_SPEED = 0x00FE6E; //
+    public static final int PGN_ENGINE_HOURS = 0x00FEE5; //
 
     // Masks for PGNs and PFs to use with VBS
 
@@ -245,7 +252,9 @@ public class J1939 extends EngineBus {
             PGN_FUEL_CONSUMPTION << 8,
             PGN_FUEL_ECONOMY << 8,
             PGN_PARKING << 8,
-            PGN_GEAR << 8
+            PGN_GEAR << 8,
+            PGN_WHEEL_SPEED<<8,
+            PGN_ENGINE_HOURS<<8
     };
 
     // These are PFs that we want to receive (all possible addresses)
@@ -561,6 +570,16 @@ public class J1939 extends EngineBus {
 
     } // sendRequestCustom()
 
+    // //////////////////////////////////////////////////////////////
+    // sendRequestEngineHours()
+    //  sends a request to respond with the engine hours
+    ////////////////////////////////////////////////////////////////
+    public void sendRequestEngineHours() {
+
+        sendRequestPGN(PGN_ENGINE_HOURS);
+
+    } // sendRequestEngineHours()
+
 
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
@@ -681,7 +700,10 @@ public class J1939 extends EngineBus {
 
     } // checkFuelEconomy()
 
-
+    long checkSpeed(long speed) {
+        vehicleSpeed = speed;
+        return engine.checkSpeed(Engine.BUS_TYPE_J1939, speed);
+    }
 
 
 
@@ -1654,6 +1676,7 @@ public class J1939 extends EngineBus {
                 l = littleEndian2Long(data, 0, 4);
                 if (l == 0xFFFFFFFFL) break; // "Unknown"
 
+                isOdometerFromPGN = true;
                 checkOdometer(ODOMETER_TYPE_HIRES, l * 5);
 
                 break;
@@ -1705,6 +1728,15 @@ public class J1939 extends EngineBus {
                     // the data is not valid or is being reported as "unknown" 0x0C like from a module that doesn't know this info
                 }
 
+                // Calculate Vehicle Speed
+                l = littleEndian2Long(data, 1, 2);
+                if (l == 0xFFFF) break;
+                Log.d(TAG, "Vehicle Speed: " + l * 0.0039+"L value "+l+" data[0]"+data[0]+" "+data[1]+" "+data[2]+" "+data[3]+" "+data[4]
+                        +" "+data[5]+" "+data[6]+" "+data[7]);
+
+                isConnectedToCAN = true;
+                checkSpeed((long) (l * 0.0039));
+
                 break;
             case PGN_GEAR: // ETC2 message
                 // Byte 1 : selected gear
@@ -1731,6 +1763,28 @@ public class J1939 extends EngineBus {
                 }
 
                 break;
+
+            case PGN_ENGINE_HOURS:
+                Log.e("ENGINE HOURS FRAME",""+data[0]+" "+data[1]+" "+data[2]+" "+data[3]);
+                l = littleEndian2Long(data, 0, 4);
+                if (l == 0xFFFFFFFFL) break;
+                else
+                    engineHours = l;
+                Log.e("ENGINE HOUSE", ""+engineHours*0.05);
+
+                break;
+
+            case PGN_WHEEL_SPEED:
+                Log.e("WHEEL SPEED FRAME",""+data[0]+" "+data[1]+" "+data[2]);
+                l = littleEndian2Long(data, 0, 2);
+                if (l == 0xFFFFFFFFL) break;
+                else
+                    wheelSpeed = l;
+                Log.e("WHEEL SPEED", ""+wheelSpeed);
+
+                break;
+
+
         } // switch
 
 
@@ -2103,6 +2157,8 @@ public class J1939 extends EngineBus {
             case PGN_FUEL_ECONOMY:
             case PGN_PARKING: //Cruise Control + Vehicle Speed
             case PGN_GEAR: // ETC2 message
+            case PGN_WHEEL_SPEED:
+            case PGN_ENGINE_HOURS:
 
                 parsePGN(packet.source_address, pgn, packet.data, 8);
                 return PARSED_PACKET_TYPE_PGN; // parsed a PGN packet
