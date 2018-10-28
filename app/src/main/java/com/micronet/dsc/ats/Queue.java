@@ -204,7 +204,10 @@ public class Queue {
             long secondaryInsertId = database.insertOrThrow(TABLE_NAME, null,
                     values);
 
-            Log.i(TAG, "Queued Event: type: " + item.event_type_id + " , seq: " + item.sequence_id + " , ids: " + insertId + ", " + secondaryInsertId);
+            String UTCDateTime = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(item.trigger_dt * 1000));
+            EventType eventType = new EventType();
+
+            Log.i(TAG, "Queued Time: " + item.trigger_dt + " Real UTC Time: " + UTCDateTime + ", Event: type: " + item.event_type_id + " : " + eventType.eventStringify(item.event_type_id) + " , seq: " + item.sequence_id + " , ids: " + insertId + ", " + secondaryInsertId);
 
             // Return the ID for the primary server
             item.setId(insertId);

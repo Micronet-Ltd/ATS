@@ -1358,7 +1358,7 @@ public class Engine {
     static final int MAX_BUSSTATUS_RECEIPT_MS = 3000; // 3 seconds
 
 
-    boolean isBusServiceRunning() {
+    synchronized boolean isBusServiceRunning() {
         long nowElapsedTime = SystemClock.elapsedRealtime();
 
         //Log.v(TAG, "times : " + nowElapsedTime  + "  " + busStatusReceiver.last_alive_ertime + "  " + (nowElapsedTime-busStatusReceiver.last_alive_ertime));
