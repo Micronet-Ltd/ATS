@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import micronet.hardware.MicronetHardware;
@@ -44,8 +45,7 @@ public class IoService extends Service {
 
 
     public static final int INPUT_POLL_PERIOD_TENTHS = 4; // poll period in tenths of a second, runs the timer that polls the hardware API
-
-
+    public static AtomicBoolean running = new AtomicBoolean(false);
 
 
     int processId = 0;
@@ -89,18 +89,18 @@ public class IoService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-
-
         String action = intent.getAction();
-
         if ((action != null) && (action.equals(SERVICE_ACTION_STOP))) {
             android.util.Log.d(TAG, "IoService Stopped");
+            running.set(false);
             stopSelf(); // stop the service (this will call OnDestroy is called)
 
-        } else {
+        } else if(!running.get()) { // If you aren't running then start running.
             android.util.Log.d(TAG, "IoService Started");
             broadcastProcessId();
             start();
+            // Make sure IoService isn't run twice.
+            running.set(true);
         }
         return START_NOT_STICKY; // no reason to re-start it as it is monitored elsewhere.
 
@@ -126,8 +126,9 @@ public class IoService extends Service {
 
 
     void start() {
-        // start polling if we aren't already
+        // Use AtomicBoolean to track whether or not we are already running.
         if (exec != null) {
+            Log.v(TAG, "Starting the IO Service...");
             exec.execute(ioInitTask);
 
             int pollperiodms = INPUT_POLL_PERIOD_TENTHS * 100;
