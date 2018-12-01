@@ -374,7 +374,7 @@ public class Engine {
         // we need to get a unique integer for this device to use
         int device_serial_int = 0;
         try {
-            device_serial_int = Integer.parseInt(device_serial, 16);
+            device_serial_int = (int) Long.parseLong(device_serial, 16);
         } catch (Exception e) {
             Log.e(TAG, "Unable to convert Device Serial # '" + device_serial + "' to a unique integer");
         }
