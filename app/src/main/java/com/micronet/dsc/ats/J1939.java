@@ -54,18 +54,16 @@ public class J1939 extends EngineBus {
 
 
     // These are really only used for logging
-    String vin = "";
+    public static String vin = "";
     boolean flagParkingBrake = false;
     boolean flagReverseGear = false;
     long odometer_m = -1;
     long fuel_mL = -1;
     long fuel_mperL = -1;
     long vehicleSpeed = -1;
-    long engineHours =-1;
+    double engineHours =-1.0;
     long wheelSpeed =-1;
 
-    public static boolean isConnectedToCAN = false;
-    public static boolean isOdometerFromPGN = false;
 
     // These are used in determining how to deal with information received by the bus
     int configParkingBrakeDefault = 0; // if parking brake info conflicts, use this value
@@ -705,7 +703,10 @@ public class J1939 extends EngineBus {
         return engine.checkSpeed(Engine.BUS_TYPE_J1939, speed);
     }
 
-
+    double checkEngineHours(double hours) {
+        engineHours = hours;
+        return engine.checkEngineHours(Engine.BUS_TYPE_J1939, hours);
+    }
 
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
@@ -1676,7 +1677,6 @@ public class J1939 extends EngineBus {
                 l = littleEndian2Long(data, 0, 4);
                 if (l == 0xFFFFFFFFL) break; // "Unknown"
 
-                isOdometerFromPGN = true;
                 checkOdometer(ODOMETER_TYPE_HIRES, l * 5);
 
                 break;
@@ -1731,10 +1731,7 @@ public class J1939 extends EngineBus {
                 // Calculate Vehicle Speed
                 l = littleEndian2Long(data, 1, 2);
                 if (l == 0xFFFF) break;
-                Log.d(TAG, "Vehicle Speed: " + l * 0.0039+"L value "+l+" data[0]"+data[0]+" "+data[1]+" "+data[2]+" "+data[3]+" "+data[4]
-                        +" "+data[5]+" "+data[6]+" "+data[7]);
 
-                isConnectedToCAN = true;
                 checkSpeed((long) (l * 0.0039));
 
                 break;
@@ -1765,22 +1762,19 @@ public class J1939 extends EngineBus {
                 break;
 
             case PGN_ENGINE_HOURS:
-                Log.e("ENGINE HOURS FRAME",""+data[0]+" "+data[1]+" "+data[2]+" "+data[3]);
                 l = littleEndian2Long(data, 0, 4);
                 if (l == 0xFFFFFFFFL) break;
                 else
                     engineHours = l;
-                Log.e("ENGINE HOUSE", ""+engineHours*0.05);
 
+                checkEngineHours((engineHours * 0.05));
                 break;
 
             case PGN_WHEEL_SPEED:
-                Log.e("WHEEL SPEED FRAME",""+data[0]+" "+data[1]+" "+data[2]);
                 l = littleEndian2Long(data, 0, 2);
                 if (l == 0xFFFFFFFFL) break;
                 else
                     wheelSpeed = l;
-                Log.e("WHEEL SPEED", ""+wheelSpeed);
 
                 break;
 

@@ -203,9 +203,8 @@ public class LocalMessage {
         ibroadcast.putExtra("lampsBitfield",engineStatus.lamps_bf);
         ibroadcast.putExtra("speed", engineStatus.vehicleSpeed);
         ibroadcast.putExtra("engineHours", engineStatus.engineHours);
-        ibroadcast.putExtra("isConnectedToCAN", J1939.isOdometerFromPGN);
-        ibroadcast.putExtra("speed", J1939.isConnectedToCAN ? engineStatus.vehicleSpeed: -1);
-        J1939.isConnectedToCAN = false;
+        ibroadcast.putExtra("speed", engineStatus.vehicleSpeed);
+        ibroadcast.putExtra("VIN", J1939.vin);
 
         // Add DTCs
 

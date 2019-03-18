@@ -840,13 +840,13 @@ public class Engine {
 
         if (newVin.equals(vin)) {
             Log.d(TAG, "VIN confirmed as " + vin);
+
+            sendVin(vin);
             return vin;
         }
 
         vin = newVin;
         Log.i(TAG, "VIN has changed to " + vin);
-
-        sendVin(vin);
 
         clearAllParams();
         service.state.writeStateString(State.STRING_VIN, vin);
@@ -856,16 +856,15 @@ public class Engine {
 
     public void sendVin(String vin) {
 
-        Log.v(TAG, "Sending Raw Bus Message");
+        Log.v(TAG, "Sending VIN Info through broadcast");
 
-        // send a local message:
         Intent ibroadcast = new Intent();
         ibroadcast.setAction(BROADCAST_MESSAGE_VIN);
         ibroadcast.putExtra("VIN", vin);
 
         service.context.sendBroadcast(ibroadcast);
 
-    }
+    }// sendVin
 
     public long checkSpeed(int bus_type,long speed) {
 
@@ -875,12 +874,22 @@ public class Engine {
         if (speed == status.vehicleSpeed) return status.vehicleSpeed;
 
         status.vehicleSpeed = speed;
-        Log.vv(TAG, "speed changed to " + status.vehicleSpeed + " km/h");
+        Log.vv(TAG, "Speed changed to " + status.vehicleSpeed + " km/h");
 
         return status.vehicleSpeed;
     } // checkSpeed()
 
+    public double checkEngineHours(int bus_type, double engineHours) {
 
+        if (!hasBusPriority(bus_type, bus_type_speed)) return status.engineHours;
+        bus_type_speed = bus_type;
+
+        if (engineHours == status.engineHours) return status.engineHours;
+
+        status.engineHours = engineHours;
+
+        return status.engineHours;
+    } // CheckEngineHours
 
 
 
@@ -1393,8 +1402,6 @@ public class Engine {
 
     boolean isBusServiceRunning() {
         long nowElapsedTime = SystemClock.elapsedRealtime();
-
-        Log.v(TAG, "times : " + nowElapsedTime  + "  " + busStatusReceiver.last_alive_ertime + "  " + (nowElapsedTime-busStatusReceiver.last_alive_ertime));
 
         if ((nowElapsedTime > busStatusReceiver.last_alive_ertime) &&
                 (nowElapsedTime - busStatusReceiver.last_alive_ertime > MAX_BUSSTATUS_RECEIPT_MS)) {
