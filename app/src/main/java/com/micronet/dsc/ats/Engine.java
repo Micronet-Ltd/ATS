@@ -378,7 +378,7 @@ public class Engine {
         // we need to get a unique integer for this device to use
         int device_serial_int = 0;
         try {
-            device_serial_int = Integer.parseInt(device_serial);
+            device_serial_int = (int) Long.parseLong(device_serial, 16);
         } catch (Exception e) {
             Log.e(TAG, "Unable to convert Device Serial # '" + device_serial + "' to a unique integer");
         }
@@ -1400,7 +1400,7 @@ public class Engine {
     static final int MAX_BUSSTATUS_RECEIPT_MS = 6000; // 3 seconds
 
 
-    boolean isBusServiceRunning() {
+    synchronized boolean isBusServiceRunning() {
         long nowElapsedTime = SystemClock.elapsedRealtime();
 
         if ((nowElapsedTime > busStatusReceiver.last_alive_ertime) &&

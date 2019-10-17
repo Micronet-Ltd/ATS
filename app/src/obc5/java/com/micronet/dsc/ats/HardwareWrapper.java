@@ -338,14 +338,28 @@ public class HardwareWrapper extends IoServiceHardwareWrapper {
                         }
                     }
 
+                    ///////////////////////////////
+                    // Ignition detection
 
+                    inputVal = allanalogs[MicronetHardware.TYPE_IGNITION];
+                    if (inputVal == -1) {
+                        Log.w(TAG, "reading IGN (TYPE_IGNITION) returned error (-1), trying again");
+                        inputVal = HardwareWrapper.getAnalogInput(MicronetHardware.TYPE_IGNITION);
+                        if (inputVal == -1) {
+                            Log.e(TAG, "reading IGN (TYPE_IGNITION) returned error (-1) on retry, aborting read");
+                        }
+                    }
+                    if (inputVal != -1) { // valid Input Value
+                        hardwareInputResults.ignition_valid = true;
+                        hardwareInputResults.ignition_input = (inputVal >= IoServiceHardwareWrapper.ANALOG_THRESHOLD_HIGH_MV);
+                    } // valid Input Value
                 } // analog inputs returned something
 
 
 
                 /////////////////////////////
                 // Handle Digital inputs
-
+/*
                 Log.vv(TAG, "getAllPinState()");
                 // Read All Inputs at once
                 int[] alldigitals = null;
@@ -358,7 +372,7 @@ public class HardwareWrapper extends IoServiceHardwareWrapper {
                     Log.e(TAG, "Could not read digital inputs;getAllPinInState() returns < 8 entries = " + Arrays.toString(alldigitals));
                 } else {
                     Log.v(TAG, " Digital results " + Arrays.toString(alldigitals));
-/*
+
                     // All boards have at least three digital inputs
 
                     // Read Types 2 (input1), 3 (input 3), and 4 (input 3)
@@ -400,27 +414,6 @@ public class HardwareWrapper extends IoServiceHardwareWrapper {
                     } // valid Input Value
 
 */
-
-
-                    ///////////////////////////////
-                    // Ignition detection
-
-
-                    inputVal = alldigitals[MicronetHardware.TYPE_IGNITION];
-                    if (inputVal == -1) {
-                        Log.w(TAG, "reading IGN (TYPE_IGNITION) returned error (-1), trying again");
-                        inputVal = HardwareWrapper.getInputState(MicronetHardware.TYPE_IGNITION);
-                        if (inputVal == -1) {
-                            Log.e(TAG, "reading IGN (TYPE_IGNITION) returned error (-1) on retry, aborting read");
-                        }
-
-                    }
-                    if (inputVal != -1) { // valid Input Value
-                        hardwareInputResults.ignition_valid = true;
-                        hardwareInputResults.ignition_input = (inputVal != 0);
-                    } // valid Input Value
-                } // getAllPinState() returned SOMETHING
-
 
             } catch (Exception e) {
                 Log.e(TAG, "Exception when trying to get Inputs from Micronet Hardware API ");

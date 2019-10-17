@@ -21,7 +21,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
     private static final String TAG = "ATS-SQLiteHelper";
 
     private static final String DATABASE_NAME = "buffer.db";
-    private static final int DATABASE_VERSION = 12;
+    private static final int DATABASE_VERSION = 13;
 
 
     public MySQLiteHelper(Context context) {
@@ -65,6 +65,12 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
                 db.execSQL(Queue.SQL_UPDATE_V12);
             }
 
+            if ((newVersion >= 13) && (oldVersion < 13)) {
+                Log.w(TAG,
+                        "Upgrading database from version " + oldVersion + " to "
+                                + newVersion + ", data will be saved");
+                db.execSQL(Queue.SQL_UPDATE_V13);
+            }
         } // oldVersion is upgradable
     }
 

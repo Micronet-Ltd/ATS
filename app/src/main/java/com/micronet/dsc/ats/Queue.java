@@ -60,6 +60,8 @@ public class Queue {
     public static final String COLUMN_DATA = "data"; // generic additional data
     public static final String COLUMN_SERVER_ID = "server_id";
 
+    public static final String COLUMN_DOCK_STATE = "dock_state";
+
 
 	// SQL_CREATE:
     // 	This is the database creation sql statement . .be sure to increment the database version in MySQLLiteHelper
@@ -89,12 +91,14 @@ public class Queue {
             COLUMN_SIGNAL_STRENGTH + " integer," +
             COLUMN_IS_ROAMING + " integer," +
             COLUMN_DATA + " blob," +
-            COLUMN_SERVER_ID + " integer NOT NULL default 0" +
+            COLUMN_SERVER_ID + " integer NOT NULL default 0," +
+            COLUMN_DOCK_STATE + " integer" +
 
     ");";
 
     public static final String SQL_UPDATE_V11 = "alter table " + TABLE_NAME  + " add column " + COLUMN_DATA + " blob" + ";";
     public static final String SQL_UPDATE_V12 = "alter table " + TABLE_NAME  + " add column " + COLUMN_SERVER_ID + " integer NOT NULL default 0" + ";";
+    public static final String SQL_UPDATE_V13 = "alter table " + TABLE_NAME  + " add column " + COLUMN_DOCK_STATE + " integer" + ";";
 
     // Database fields
     private SQLiteDatabase database;
@@ -200,7 +204,10 @@ public class Queue {
             long secondaryInsertId = database.insertOrThrow(TABLE_NAME, null,
                     values);
 
-            Log.i(TAG, "Queued Event: type: " + item.event_type_id + " , seq: " + item.sequence_id + " , ids: " + insertId + ", " + secondaryInsertId);
+            String UTCDateTime = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date(item.trigger_dt * 1000));
+            EventType eventType = new EventType();
+
+            Log.i(TAG, "Queued Time: " + item.trigger_dt + " Real UTC Time: " + UTCDateTime + ", Event: type: " + item.event_type_id + " : " + eventType.eventStringify(item.event_type_id) + " , seq: " + item.sequence_id + " , ids: " + insertId + ", " + secondaryInsertId);
 
             // Return the ID for the primary server
             item.setId(insertId);
@@ -376,6 +383,8 @@ public class Queue {
 
         item.additional_data_bytes = cursor.getBlob(21);
 
+        item.dock_state = (byte) cursor.getShort(23);
+
         return item;
     } // cursorToItem()
 
@@ -411,6 +420,7 @@ public class Queue {
         values.put(COLUMN_IS_ROAMING , (item.is_roaming ? 1 : 0));
         values.put(COLUMN_DATA , (item.additional_data_bytes));
         values.put(COLUMN_SERVER_ID , server_id);
+        values.put(COLUMN_DOCK_STATE , item.dock_state);
 
         return values;
     } // itemToContentValues

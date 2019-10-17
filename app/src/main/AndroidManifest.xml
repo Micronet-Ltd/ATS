@@ -83,7 +83,7 @@
         <!-- Start the Service on boot -->
 
         <receiver android:name=".BootReceiver" >
-            <intent-filter>
+            <intent-filter android:priority="800">
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>

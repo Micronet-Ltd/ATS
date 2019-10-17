@@ -28,7 +28,8 @@ public class EventType {
     public final static int EVENT_TYPE_ERROR = 12; // some error has occurred in the App
     public final static int EVENT_TYPE_CHANGE_SYSTEMTIME = 13; // this app has changed the system time
     public final static int EVENT_TYPE_CONFIGURATION_REPLACED = 14; // a configuration file has been replaced/overwritten
-
+    public final static int EVENT_TYPE_DEVICE_DOCKED = 15; // device docked
+    public final static int EVENT_TYPE_DEVICE_UNDOCKED = 16; // device undocked
 
     // Events triggered by the device . .these will be sent by local broadcast
     public final static int EVENT_TYPES_DEVICE_START = 20;
@@ -41,6 +42,7 @@ public class EventType {
     public final static int EVENT_TYPE_INPUT4_ON = 24;
     public final static int EVENT_TYPE_INPUT5_ON = 25;
     public final static int EVENT_TYPE_INPUT6_ON = 26;
+    public final static int EVENT_TYPE_INPUT7_ON = 27;
 
     public final static int EVENT_TYPE_IGNITION_KEY_OFF = 30;
     public final static int EVENT_TYPE_INPUT1_OFF = 31;
@@ -49,6 +51,7 @@ public class EventType {
     public final static int EVENT_TYPE_INPUT4_OFF = 34;
     public final static int EVENT_TYPE_INPUT5_OFF = 35;
     public final static int EVENT_TYPE_INPUT6_OFF = 36;
+    public final static int EVENT_TYPE_INPUT7_OFF = 37;
 
     public final static int EVENT_TYPE_ENGINE_STATUS_ON = 40;
     public final static int EVENT_TYPE_LOW_BATTERY_ON = 41;
@@ -122,6 +125,190 @@ public class EventType {
     public static int[] NONOTA_EVENTS = {
             // There are no non-ota events
     };
+
+    public String eventStringify(int event){
+        String eventString;
+        switch (event){
+            case EVENT_TYPE_ACK:
+                eventString = "EVENT_TYPE_ACK";
+                break;
+            case EVENT_TYPE_NAK:
+                eventString = "EVENT_TYPE_NAK";
+                break;
+            case EVENT_TYPE_ACK_TOP:
+                eventString = "EVENT_TYPE_ACK_TOP";
+                break;
+            case EVENT_TYPE_REBOOT:
+                eventString = "EVENT_TYPE_REBOOT";
+                break;
+            case EVENT_TYPE_RESTART:
+                eventString = "EVENT_TYPE_RESTART";
+                break;
+            case EVENT_TYPE_WAKEUP:
+                eventString = "EVENT_TYPE_WAKEUP";
+                break;
+            case EVENT_TYPE_SHUTDOWN:
+                eventString = "EVENT_TYPE_SHUTDOWN";
+                break;
+            case EVENT_TYPE_HEARTBEAT:
+                eventString = "EVENT_TYPE_HEARTBEAT";
+                break;
+            case EVENT_TYPE_PING:
+                eventString = "EVENT_TYPE_PING";
+                break;
+            case EVENT_TYPE_ERROR:
+                eventString = "EVENT_TYPE_ERROR";
+                break;
+            case EVENT_TYPE_CHANGE_SYSTEMTIME:
+                eventString = "EVENT_TYPE_CHANGE_SYSTEMTIME";
+                break;
+            case EVENT_TYPE_CONFIGURATION_REPLACED:
+                eventString = "EVENT_TYPE_CONFIGURATION_REPLACED";
+                break;
+            case EVENT_TYPE_DEVICE_DOCKED:
+                eventString = "EVENT_TYPE_DEVICE_DOCKED";
+                break;
+            case EVENT_TYPE_DEVICE_UNDOCKED:
+                eventString = "EVENT_TYPE_DEVICE_UNDOCKED";
+                break;
+            case EVENT_TYPE_IGNITION_KEY_ON:
+                eventString = "EVENT_TYPE_IGNITION_KEY_ON";
+                break;
+            case EVENT_TYPE_INPUT1_ON:
+                eventString = "EVENT_TYPE_INPUT1_ON";
+                break;
+            case EVENT_TYPE_INPUT2_ON:
+                eventString = "EVENT_TYPE_INPUT2_ON";
+                break;
+            case EVENT_TYPE_INPUT3_ON:
+                eventString = "EVENT_TYPE_INPUT3_ON";
+                break;
+            case EVENT_TYPE_INPUT4_ON:
+                eventString = "EVENT_TYPE_INPUT4_ON";
+                break;
+            case EVENT_TYPE_INPUT5_ON:
+                eventString = "EVENT_TYPE_INPUT5_ON";
+                break;
+            case EVENT_TYPE_INPUT6_ON:
+                eventString = "EVENT_TYPE_INPUT6_ON";
+                break;
+            case EVENT_TYPE_INPUT7_ON:
+                eventString = "EVENT_TYPE_INPUT7_ON";
+                break;
+            case EVENT_TYPE_IGNITION_KEY_OFF:
+                eventString = "EVENT_TYPE_IGNITION_KEY_OFF";
+                break;
+            case EVENT_TYPE_INPUT1_OFF:
+                eventString = "EVENT_TYPE_INPUT1_OFF";
+                break;
+            case EVENT_TYPE_INPUT2_OFF:
+                eventString = "EVENT_TYPE_INPUT2_OFF";
+                break;
+            case EVENT_TYPE_INPUT3_OFF:
+                eventString = "EVENT_TYPE_INPUT3_OFF";
+                break;
+            case EVENT_TYPE_INPUT4_OFF:
+                eventString = "EVENT_TYPE_INPUT4_OFF";
+                break;
+            case EVENT_TYPE_INPUT5_OFF:
+                eventString = "EVENT_TYPE_INPUT5_OFF";
+                break;
+            case EVENT_TYPE_INPUT6_OFF:
+                eventString = "EVENT_TYPE_INPUT6_OFF";
+                break;
+            case EVENT_TYPE_INPUT7_OFF:
+                eventString = "EVENT_TYPE_INPUT7_OFF";
+                break;
+            case EVENT_TYPE_ENGINE_STATUS_ON:
+                eventString = "EVENT_TYPE_ENGINE_STATUS_ON";
+                break;
+            case EVENT_TYPE_LOW_BATTERY_ON:
+                eventString = "EVENT_TYPE_LOW_BATTERY_ON";
+                break;
+            case EVENT_TYPE_BAD_ALTERNATOR_ON:
+                eventString = "EVENT_TYPE_BAD_ALTERNATOR_ON";
+                break;
+            case EVENT_TYPE_IDLING_ON:
+                eventString = "EVENT_TYPE_IDLING_ON";
+                break;
+            case EVENT_TYPE_ENGINE_STATUS_OFF:
+                eventString = "EVENT_TYPE_ENGINE_STATUS_OFF";
+                break;
+            case EVENT_TYPE_LOW_BATTERY_OFF:
+                eventString = "EVENT_TYPE_LOW_BATTERY_OFF";
+                break;
+            case EVENT_TYPE_BAD_ALTERNATOR_OFF:
+                eventString = "EVENT_TYPE_BAD_ALTERNATOR_OFF";
+                break;
+            case EVENT_TYPE_IDLING_OFF:
+                eventString = "EVENT_TYPE_IDLING_OFF";
+                break;
+            case EVENT_TYPE_SPEEDING:
+                eventString = "EVENT_TYPE_SPEEDING";
+                break;
+            case EVENT_TYPE_ACCELERATING:
+                eventString = "EVENT_TYPE_ACCELERATING";
+                break;
+            case EVENT_TYPE_BRAKING:
+                eventString = "EVENT_TYPE_BRAKING";
+                break;
+            case EVENT_TYPE_CORNERING:
+                eventString = "EVENT_TYPE_CORNERING";
+                break;
+            case EVENT_TYPES_VEHICLE_END:
+                eventString = "EVENT_TYPES_VEHICLE_END";
+                break;
+            case EVENT_TYPE_REVERSE_ON:
+                eventString = "EVENT_TYPE_REVERSE_ON";
+                break;
+            case EVENT_TYPE_PARKBRAKE_ON:
+                eventString = "EVENT_TYPE_PARKBRAKE_ON";
+                break;
+            case EVENT_TYPE_FAULTCODE_ON:
+                eventString = "EVENT_TYPE_FAULTCODE_ON";
+                break;
+            case EVENT_TYPE_FUELSTATUS_PING:
+                eventString = "EVENT_TYPE_FUELSTATUS_PING";
+                break;
+            case EVENT_TYPE_REVERSE_OFF:
+                eventString = "EVENT_TYPE_REVERSE_OFF";
+                break;
+            case EVENT_TYPE_PARKBRAKE_OFF:
+                eventString = "EVENT_TYPE_PARKBRAKE_OFF";
+                break;
+            case EVENT_TYPE_FAULTCODE_OFF:
+                eventString = "EVENT_TYPE_FAULTCODE_OFF";
+                break;
+            case EVENT_TYPE_CUSTOM_PAYLOAD:
+                eventString = "EVENT_TYPE_CUSTOM_PAYLOAD";
+                break;
+            case EVENT_TYPE_CONFIGW:
+                eventString = "EVENT_TYPE_CONFIGW";
+                break;
+            case EVENT_TYPE_MOREMAPW:
+                eventString = "EVENT_TYPE_MOREMAPW";
+                break;
+            case EVENT_TYPE_MTREMAPW:
+                eventString = "EVENT_TYPE_MTREMAPW";
+                break;
+            case EVENT_TYPE_CLEAR_QUEUE:
+                eventString = "EVENT_TYPE_CLEAR_QUEUE";
+                break;
+            case EVENT_TYPE_CLEAR_ODOMETER:
+                eventString = "EVENT_TYPE_CLEAR_ODOMETER";
+                break;
+            case EVENT_TYPE_RESET_FOTA_UPDATER:
+                eventString = "EVENT_TYPE_RESET_FOTA_UPDATER";
+                break;
+            case EVENT_TYPE_TEST:
+                eventString = "EVENT_TYPE_TEST";
+                break;
+            default:
+                eventString = "";
+                break;
+        }
+        return eventString;
+    }
 
 
 } // class Event

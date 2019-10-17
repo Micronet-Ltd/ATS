@@ -47,6 +47,8 @@ public class QueueItem {
 
     public byte[] additional_data_bytes = null;
 
+    public byte dock_state;
+
 
 
 
@@ -98,6 +100,7 @@ public class QueueItem {
         n.signal_strength = this.signal_strength;
         n.is_roaming = this.is_roaming;
 
+        n.dock_state = this.dock_state;
 
         return n;
     }

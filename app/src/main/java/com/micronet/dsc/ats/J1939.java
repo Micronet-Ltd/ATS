@@ -213,7 +213,7 @@ public class J1939 extends EngineBus {
     // J1939 Definitions
 
 
-    // PFs have a destination address
+    // PFs (PDU format) have a destination address
 
 
     public static final int PF_REQUEST = 0xEA;              // make a request of another node
